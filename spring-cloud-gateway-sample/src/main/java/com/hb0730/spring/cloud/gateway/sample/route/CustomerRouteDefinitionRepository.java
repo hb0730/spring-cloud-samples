@@ -40,10 +40,11 @@ public class CustomerRouteDefinitionRepository implements RouteDefinitionReposit
     @Override
     public Mono<Void> save(Mono<RouteDefinition> route) {
         logger.debug("保存路由");
-        return route.flatMap(r -> {
-            routes.put(r.getId(), r);
+        return route.flatMap((r) -> {
+            this.routes.put(r.getId(), r);
             return Mono.empty();
         });
+
     }
 
     @Override
@@ -57,5 +58,9 @@ public class CustomerRouteDefinitionRepository implements RouteDefinitionReposit
             return Mono.defer(() -> Mono.error(
                     new NotFoundException("RouteDefinition not found: " + routeId)));
         });
+    }
+
+    public Map<String, RouteDefinition> getRoutes(){
+        return routes;
     }
 }

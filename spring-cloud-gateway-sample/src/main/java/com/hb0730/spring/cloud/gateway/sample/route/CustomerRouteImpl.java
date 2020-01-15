@@ -1,8 +1,19 @@
 package com.hb0730.spring.cloud.gateway.sample.route;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
+import org.springframework.cloud.gateway.handler.predicate.PredicateDefinition;
+import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
+
+import java.net.URI;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -13,7 +24,13 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class CustomerRouteImpl {
-    private ApplicationEventPublisher publisher;
+
+    private CustomerRouteDefinitionRepository repository;
+
+    @Autowired
+    public CustomerRouteImpl(CustomerRouteDefinitionRepository repository) {
+        this.repository = repository;
+    }
 
     /**
      * <p>
@@ -25,7 +42,18 @@ public class CustomerRouteImpl {
      * @return success
      */
     public String add(String id, String path) {
-        publisher.publishEvent(new RefreshRoutesEvent(this));
+        RouteDefinition definition = new RouteDefinition();
+        PredicateDefinition predicate = new PredicateDefinition();
+        Map<String, String> predicateParams = new HashMap<>(8);
+        definition.setId(id);
+        predicate.setName("Path");
+        predicateParams.put("pattern", "/baidu");
+        predicateParams.put("pathPattern", "/baidu");
+        predicate.setArgs(predicateParams);
+        definition.setPredicates(Arrays.asList(predicate));
+        URI uri = UriComponentsBuilder.fromHttpUrl("http://"+path).build().toUri();
+        definition.setUri(uri);
+        repository.save(Mono.just(definition)).subscribe();
         return "success";
     }
 
@@ -39,12 +67,10 @@ public class CustomerRouteImpl {
      * @return
      */
     public String edit(String id, String path) {
-        publisher.publishEvent(new RefreshRoutesEvent(this));
         return "success";
     }
 
     public String delete(String id) {
-        publisher.publishEvent(new RefreshRoutesEvent(this));
         return "success";
     }
 }
